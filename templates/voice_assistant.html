@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Voice Assistant - Vision Assist AI{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 40px auto; padding: 0 20px; text-align: center;">
+    <div class="glass-container">
+        <!-- Visual canvas microphone bubble -->
+        <div style="margin-bottom: 25px; display: inline-block;">
+            <div style="width: 100px; height: 100px; border-radius: 50%; background: rgba(138, 43, 226, 0.1); border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; animation: pulse 2.5s infinite;">
+                <i class="fa-solid fa-microphone-lines" style="font-size: 3rem; color: var(--primary);"></i>
+            </div>
+        </div>
+
+        <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">Voice Assistant Services</h1>
+        <p style="color: var(--text-secondary-dark); font-size: 1rem; margin-bottom: 25px;">
+            The pyttsx3 offline text-to-speech engine is listening for voice trigger signals. 
+        </p>
+
+        <!-- Simulated Visualizer Canvas -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; margin-bottom: 30px; border: 1px solid var(--border-glass); overflow: hidden;">
+            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--secondary); display: block; margin-bottom: 10px; font-weight: 600; letter-spacing: 1px;">Audio Spectrum Simulation</span>
+            <canvas id="audio-wave-canvas" style="display: block; width: 100%; border-radius: 6px;"></canvas>
+        </div>
+
+        <!-- Controls/Commands info -->
+        <div style="background: rgba(0,0,0,0.15); border-radius: 8px; padding: 20px; text-align: left; margin-bottom: 30px; border: 1px solid var(--border-glass);">
+            <h3 style="margin-bottom: 12px; font-size: 1rem; font-weight: 600;"><i class="fa-solid fa-keyboard" style="color: var(--secondary);"></i> Voice Shortcuts</h3>
+            <ul style="list-style-type: none; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary-dark);">
+                <li style="margin-bottom: 6px;"><i class="fa-regular fa-square-caret-right" style="color: var(--primary);"></i> Press <strong>Spacebar</strong> to trigger a location check query.</li>
+                <li style="margin-bottom: 6px;"><i class="fa-regular fa-square-caret-right" style="color: var(--primary);"></i> The system speaks detections automatically through your audio outputs.</li>
+            </ul>
+        </div>
+
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <a href="{{ url_for('voice') }}" class="btn btn-primary"><i class="fa-solid fa-volume-high"></i> Re-announce Status</a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Return to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

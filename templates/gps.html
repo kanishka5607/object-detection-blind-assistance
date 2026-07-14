@@ -1,17 +1,109 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>GPS Navigation</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-<h2>GPS Navigation</h2>
+{% block title %}GPS Navigation - Vision Assist AI{% endblock %}
 
-<p>GPS Navigation Started</p>
+{% block content %}
+<div style="max-width: 900px; margin: 40px auto; padding: 0 20px;">
+    <div class="glass-container" style="text-align: left;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-glass); padding-bottom: 15px; margin-bottom: 25px;">
+            <div>
+                <h1 style="font-size: 2rem; font-weight: 700; display: flex; align-items: center; gap: 12px;">
+                    <i class="fa-solid fa-map-location-dot" style="color: var(--secondary);"></i>
+                    <span>GPS Guidance Hub</span>
+                </h1>
+                <p style="color: var(--text-secondary-dark); font-size: 0.95rem;">Simulated indoor/outdoor routes and real-time navigation guidance.</p>
+            </div>
+            <span class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; background: rgba(46, 204, 113, 0.15); border: 1px solid var(--success); color: #2ecc71; cursor: default;">
+                <i class="fa-solid fa-satellite-dish"></i> GPS Linked
+            </span>
+        </div>
 
-<a href="/dashboard">
-    <button>Back</button>
-</a>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+            <!-- Directions settings form -->
+            <div>
+                <h3 style="margin-bottom: 15px; font-size: 1.1rem; color: var(--secondary);"><i class="fa-solid fa-route"></i> Set Destination</h3>
+                
+                <div class="input-group">
+                    <label for="start"><i class="fa-solid fa-location-crosshairs"></i> Starting Location</label>
+                    <input type="text" id="start" class="input-control" value="Current Position (Living Room)" readonly>
+                </div>
+                
+                <div class="input-group">
+                    <label for="dest"><i class="fa-solid fa-location-dot"></i> Enter Destination</label>
+                    <input type="text" id="dest" class="input-control" placeholder="e.g. Kitchen, Sidewalk, Park" value="Kitchen Area">
+                </div>
 
-</body>
-</html>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="speakRoute()">
+                    <i class="fa-solid fa-location-arrow"></i> Calculate & Speak Route
+                </button>
+                
+                <!-- Mock Guidance Log -->
+                <div style="margin-top: 25px; border-top: 1px solid var(--border-glass); padding-top: 20px;">
+                    <h4 style="margin-bottom: 10px; font-size: 0.95rem; font-weight: 600;"><i class="fa-solid fa-list-ol"></i> Step-by-Step Guidance</h4>
+                    <ol style="margin-left: 18px; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary-dark);">
+                        <li style="margin-bottom: 6px;">Move forward 5 steps into the hallway corridor.</li>
+                        <li style="margin-bottom: 6px;">Turn 90 degrees to your right side.</li>
+                        <li style="margin-bottom: 6px;">Avoid obstacle (chair) detected in path.</li>
+                        <li style="margin-bottom: 6px;">Kitchen entrance reached on your left side.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Vector Map Layout Placeholder -->
+            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px dashed var(--border-glass); border-radius: 12px; background: rgba(0,0,0,0.15); padding: 20px; min-height: 300px;">
+                <!-- High-quality SVG vector map illustration -->
+                <svg width="100%" height="220" viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="200" height="120" rx="8" fill="#1e1e2f"/>
+                    <grid stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/>
+                    <!-- Paths / Walls -->
+                    <path d="M 20 20 L 180 20 L 180 100 L 20 100 Z" stroke="rgba(255,255,255,0.1)" stroke-width="2" stroke-dasharray="2 2"/>
+                    <path d="M 50 20 L 50 100" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+                    <path d="M 120 20 L 120 100" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+                    <!-- Navigation line -->
+                    <path d="M 30 80 L 80 80 L 80 40 L 150 40" stroke="var(--secondary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: dash 5s linear infinite; stroke-dasharray: 6 3;"/>
+                    
+                    <!-- Nodes -->
+                    <circle cx="30" cy="80" r="5" fill="var(--primary)"/>
+                    <circle cx="150" cy="40" r="5" fill="var(--secondary)"/>
+                    <!-- Text markers -->
+                    <text x="38" y="83" fill="#fff" font-size="6" font-family="sans-serif">START</text>
+                    <text x="158" y="43" fill="#fff" font-size="6" font-family="sans-serif">KITCHEN</text>
+                    
+                    <!-- Obstacle icon -->
+                    <polygon points="80,55 75,65 85,65" fill="var(--danger)"/>
+                    <text x="88" y="62" fill="var(--danger)" font-size="5" font-family="sans-serif">OBSTACLE</text>
+                </svg>
+                <p style="color: var(--text-secondary-dark); font-size: 0.8rem; margin-top: 15px; text-align: center;">
+                    <i class="fa-solid fa-location-crosshairs" style="color: var(--secondary);"></i> Room Mapping System Active
+                </p>
+            </div>
+        </div>
+
+        <!-- Back to Dashboard -->
+        <div style="margin-top: 30px; border-top: 1px solid var(--border-glass); padding-top: 20px;">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary" style="padding: 10px 20px;">
+                <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function speakRoute() {
+    // Basic route vocal trigger
+    const startLoc = document.getElementById("start").value;
+    const destLoc = document.getElementById("dest").value;
+    const utterance = `Calculating path from ${startLoc} to ${destLoc}. Route loaded. Walk forward. Obstacles will be announced in real-time.`;
+    
+    // Call text-to-speech
+    if ('speechSynthesis' in window) {
+        const speech = new SpeechSynthesisUtterance(utterance);
+        speech.rate = 1.0;
+        window.speechSynthesis.speak(speech);
+    } else {
+        alert("Audio guidance started.");
+    }
+}
+</script>
+{% endblock %}

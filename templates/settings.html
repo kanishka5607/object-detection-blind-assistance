@@ -1,25 +1,145 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Settings</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-<h2>Settings</h2>
+{% block title %}Settings - Vision Assist AI{% endblock %}
 
-<p>Voice Volume</p>
-<input type="range">
+{% block content %}
+<div style="max-width: 900px; margin: 40px auto; padding: 0 20px;">
+    <!-- Double column container for clean balance -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px;">
+        
+        <!-- Left Column: Preference Sliders -->
+        <div class="glass-container" style="text-align: left;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-glass); padding-bottom: 15px;">
+                <i class="fa-solid fa-sliders" style="color: var(--secondary);"></i>
+                <span>Portal Configurations</span>
+            </h2>
+            
+            <form action="{{ url_for('settings') }}" method="POST">
+                <input type="hidden" name="form_type" value="preferences">
+                
+                <!-- Voice Volume Slider -->
+                <div class="input-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="margin: 0;"><i class="fa-solid fa-volume-high"></i> Voice Volume</label>
+                        <span id="volume-val" style="font-weight: 700; color: var(--secondary);">{{ settings_data.voice_volume }}%</span>
+                    </div>
+                    <input type="range" name="voice_volume" id="voice_volume" min="10" max="100" value="{{ settings_data.voice_volume }}" style="width: 100%; accent-color: var(--secondary);" oninput="document.getElementById('volume-val').innerText = this.value + '%'">
+                </div>
+                
+                <!-- Voice Speed Slider -->
+                <div class="input-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="margin: 0;"><i class="fa-solid fa-gauge"></i> Speaking Speed</label>
+                        <span id="speed-val" style="font-weight: 700; color: var(--primary);">{{ settings_data.voice_speed }} wpm</span>
+                    </div>
+                    <input type="range" name="voice_speed" id="voice_speed" min="100" max="250" value="{{ settings_data.voice_speed }}" style="width: 100%; accent-color: var(--primary);" oninput="document.getElementById('speed-val').innerText = this.value + ' wpm'">
+                </div>
+                
+                <!-- Confidence Sensitivity Slider -->
+                <div class="input-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="margin: 0;"><i class="fa-solid fa-bullseye"></i> Detection Sensitivity</label>
+                        <span id="sens-val" style="font-weight: 700; color: var(--secondary);">{{ settings_data.detection_sensitivity }}%</span>
+                    </div>
+                    <input type="range" name="detection_sensitivity" id="detection_sensitivity" min="50" max="95" value="{{ settings_data.detection_sensitivity }}" style="width: 100%; accent-color: var(--secondary);" oninput="document.getElementById('sens-val').innerText = this.value + '%'">
+                </div>
+                
+                <!-- Speech Cooldown Gap Slider -->
+                <div class="input-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="margin: 0;"><i class="fa-solid fa-hourglass-half"></i> Announcement Gap</label>
+                        <span id="gap-val" style="font-weight: 700; color: var(--primary);">{{ settings_data.speech_gap|default(3) }}s</span>
+                    </div>
+                    <input type="range" name="speech_gap" id="speech_gap" min="1" max="10" value="{{ settings_data.speech_gap|default(3) }}" style="width: 100%; accent-color: var(--primary);" oninput="document.getElementById('gap-val').innerText = this.value + 's'">
+                </div>
+                
+                <!-- Dark Mode Toggle Checkbox -->
+                <div class="input-group" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; padding: 10px 0;">
+                    <label style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-moon"></i> System Dark Mode</label>
+                    <label style="position: relative; display: inline-block; width: 50px; height: 26px;">
+                        <input type="checkbox" name="dark_mode" {% if settings_data.dark_mode %}checked{% endif %} style="opacity: 0; width: 0; height: 0;" id="dark-toggle-check">
+                        <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;" id="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <!-- Submit -->
+                <button type="submit" class="btn btn-secondary" style="width: 100%;">
+                    <i class="fa-solid fa-floppy-disk"></i> Save System Settings
+                </button>
+            </form>
+        </div>
+        
+        <!-- Right Column: Account profile detail alteration (Head Up Account Alteration) -->
+        <div class="glass-container" style="text-align: left;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-glass); padding-bottom: 15px;">
+                <i class="fa-solid fa-user-gear" style="color: var(--primary);"></i>
+                <span>Caretaker Account Security</span>
+            </h2>
+            
+            <form action="{{ url_for('settings') }}" method="POST" id="account-alter-form">
+                <input type="hidden" name="form_type" value="account">
+                
+                <!-- Change Username -->
+                <div class="input-group">
+                    <label for="username"><i class="fa-solid fa-circle-user"></i> Portal Username</label>
+                    <input type="text" name="username" id="username" class="input-control" value="{{ user_info.username }}" required>
+                </div>
+                
+                <!-- Verification Current Password -->
+                <div class="input-group">
+                    <label for="current_password"><i class="fa-solid fa-key"></i> Current Password (Verify)</label>
+                    <div class="password-wrapper">
+                        <input type="password" name="current_password" id="current_password" class="input-control" placeholder="Enter current password" required>
+                        <button type="button" class="password-toggle-btn" data-target="current_password">👁️</button>
+                    </div>
+                </div>
+                
+                <!-- Optional New Password -->
+                <div class="input-group">
+                    <label for="new_password"><i class="fa-solid fa-lock"></i> New Password (Optional)</label>
+                    <div class="password-wrapper">
+                        <input type="password" name="new_password" id="new_password" class="input-control" placeholder="Leave blank to keep same password">
+                        <button type="button" class="password-toggle-btn" data-target="new_password">👁️</button>
+                    </div>
+                </div>
+                
+                <!-- Submit -->
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fa-solid fa-user-pen"></i> Alter Account Details
+                </button>
+            </form>
+        </div>
+    </div>
 
-<br><br>
+    <!-- Back to Dashboard -->
+    <div style="margin-top: 30px; text-align: left;">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary" style="padding: 10px 20px;">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
 
-<p>Voice Speed</p>
-<input type="range">
-
-<br><br>
-
-<a href="/dashboard">
-    <button>Save Settings</button>
-</a>
-
-</body>
-</html>
+<style>
+/* Custom switch CSS slider rules */
+#dark-toggle-check:checked + #toggle-slider {
+    background-color: var(--primary);
+}
+#dark-toggle-check:focus + #toggle-slider {
+    box-shadow: 0 0 1px var(--primary);
+}
+#dark-toggle-check:checked + #toggle-slider:before {
+    transform: translateX(24px);
+}
+#toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+</style>
+{% endblock %}

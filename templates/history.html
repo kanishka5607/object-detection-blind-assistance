@@ -1,21 +1,157 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Detection History</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-<h2>Detection History</h2>
+{% block title %}Detection Log History - Vision Assist AI{% endblock %}
 
-<ul>
-    <li>Person Detected</li>
-    <li>Chair Detected</li>
-    <li>Bottle Detected</li>
-</ul>
+{% block content %}
+<div style="max-width: 1000px; margin: 40px auto; padding: 0 20px;">
+    
+    <!-- Header with visual analytics stats -->
+    <div class="glass-container" style="margin-bottom: 30px; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-glass); padding-bottom: 15px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <h1 style="font-size: 2rem; font-weight: 800; display: flex; align-items: center; gap: 12px; margin: 0;">
+                    <i class="fa-solid fa-clock-rotate-left" style="color: var(--secondary);"></i>
+                    <span>Visual Scan Logs</span>
+                </h1>
+                <p style="color: var(--text-secondary-dark); font-size: 0.95rem; margin-top: 5px;">Analytical records of objects detected by the AI assistant.</p>
+            </div>
+            
+            {% if logs %}
+                <form action="{{ url_for('history') }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete all scan records?');" style="margin: 0;">
+                    <button type="submit" class="btn btn-danger" style="padding: 10px 18px; font-size: 0.9rem;">
+                        <i class="fa-solid fa-trash-can"></i> Wipe Logs Database
+                    </button>
+                </form>
+            {% endif %}
+        </div>
 
-<a href="/dashboard">
-    <button>Back</button>
-</a>
+        <!-- Summary Statistics Row -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); padding: 15px; border-radius: 8px;">
+                <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary-dark); display: block;">Total Scans</span>
+                <span style="font-size: 1.8rem; font-weight: 700; color: var(--secondary);" id="total-scans-count">{{ logs|length }}</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); padding: 15px; border-radius: 8px;">
+                <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary-dark); display: block;">Database Status</span>
+                <span style="font-size: 1.2rem; font-weight: 700; color: var(--success); display: block; margin-top: 8px;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Live Syncing
+                </span>
+            </div>
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); padding: 15px; border-radius: 8px;">
+                <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary-dark); display: block;">Active Device</span>
+                <span style="font-size: 1.2rem; font-weight: 700; color: var(--primary); display: block; margin-top: 8px;">
+                    <i class="fa-solid fa-camera"></i> Main Camera
+                </span>
+            </div>
+        </div>
+    </div>
 
-</body>
-</html>
+    <!-- Live Search Filter Input -->
+    {% if logs %}
+        <div class="glass-container" style="padding: 15px; margin-bottom: 25px; display: flex; align-items: center; gap: 12px;">
+            <i class="fa-solid fa-magnifying-glass" style="color: var(--secondary); font-size: 1.1rem;"></i>
+            <input type="text" id="log-search-input" class="input-control" placeholder="Search logs by object label (e.g. chair, person, bottle)..." style="margin: 0; padding: 10px 15px; border: none; background: transparent;" onkeyup="filterLogs()">
+        </div>
+    {% endif %}
+
+    <!-- Log List Cards -->
+    <div class="glass-container" style="text-align: left;">
+        {% if logs %}
+            <div id="logs-cards-container" style="display: grid; gap: 15px;">
+                {% for log in logs %}
+                    <!-- Dynamic Log Card Item -->
+                    <div class="log-card-item" data-object="{{ log.object_name | lower }}" style="display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: 10px; transition: var(--transition);">
+                        
+                        <!-- Left Part: Icon & Title info -->
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="width: 45px; height: 45px; border-radius: 8px; background: rgba(138, 43, 226, 0.1); border: 1px solid rgba(138, 43, 226, 0.2); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: var(--primary);">
+                                {% if log.object_name | lower == 'person' %}
+                                    <i class="fa-solid fa-user"></i>
+                                {% elif log.object_name | lower == 'chair' or log.object_name | lower == 'couch' or log.object_name | lower == 'sofa' %}
+                                    <i class="fa-solid fa-couch"></i>
+                                {% elif log.object_name | lower == 'bottle' or log.object_name | lower == 'cup' or log.object_name | lower == 'glass' %}
+                                    <i class="fa-solid fa-bottle-water"></i>
+                                {% elif log.object_name | lower == 'handbag' or log.object_name | lower == 'backpack' %}
+                                    <i class="fa-solid fa-bag-shopping"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-cube"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.05rem; font-weight: 700; text-transform: capitalize; margin: 0;">{{ log.object_name }}</h3>
+                                <span style="font-size: 0.8rem; color: var(--text-secondary-dark);"><i class="fa-regular fa-clock"></i> Detected at {{ log.timestamp }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Right Part: Progress Meter -->
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="text-align: right;">
+                                <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary-dark); display: block;">Confidence</span>
+                                <strong style="font-size: 1.1rem; color: var(--secondary);">{{ (log.confidence * 100)|int }}%</strong>
+                            </div>
+                            <div style="width: 60px; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; display: block;">
+                                <div style="width: {{ (log.confidence * 100)|int }}%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary));"></div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Empty search feedback state -->
+            <div id="no-search-results" style="display: none; padding: 40px; text-align: center;">
+                <i class="fa-solid fa-magnifying-glass-minus" style="font-size: 3rem; color: var(--text-secondary-dark); opacity: 0.5; margin-bottom: 15px;"></i>
+                <h4>No matching labels found</h4>
+                <p style="color: var(--text-secondary-dark); font-size: 0.85rem;">Try searching for another object word.</p>
+            </div>
+        {% else %}
+            <!-- Empty state illustration -->
+            <div style="padding: 60px 20px; text-align: center;">
+                <i class="fa-solid fa-box-open" style="font-size: 4rem; color: var(--text-secondary-dark); margin-bottom: 20px; opacity: 0.5;"></i>
+                <h3 style="font-size: 1.2rem; margin-bottom: 10px;">No scan records yet</h3>
+                <p style="color: var(--text-secondary-dark); font-size: 0.9rem; max-width: 400px; margin: 0 auto 25px auto;">
+                    Real-time visual records will log automatically once the camera is launched and scanning takes place.
+                </p>
+                <a href="{{ url_for('camera') }}" class="btn btn-primary"><i class="fa-solid fa-camera"></i> Launch Live Camera</a>
+            </div>
+        {% endif %}
+
+        <div style="margin-top: 30px; border-top: 1px solid var(--border-glass); padding-top: 20px;">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary" style="padding: 10px 20px;">
+                <i class="fa-solid fa-arrow-left"></i> Return to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- JS code for real time log filtering -->
+<script>
+function filterLogs() {
+    const input = document.getElementById("log-search-input");
+    const filter = input.value.toLowerCase();
+    const cards = document.getElementsByClassName("log-card-item");
+    const container = document.getElementById("logs-cards-container");
+    const noResults = document.getElementById("no-search-results");
+    
+    let visibleCount = 0;
+    
+    for (let i = 0; i < cards.length; i++) {
+        const objectLabel = cards[i].getAttribute("data-object");
+        if (objectLabel.includes(filter)) {
+            cards[i].style.display = "flex";
+            visibleCount++;
+        } else {
+            cards[i].style.display = "none";
+        }
+    }
+    
+    // Update live total count label
+    document.getElementById("total-scans-count").innerText = visibleCount;
+    
+    if (visibleCount === 0) {
+        noResults.style.display = "block";
+    } else {
+        noResults.style.display = "none";
+    }
+}
+</script>
+{% endblock %}

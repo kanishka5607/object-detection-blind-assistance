@@ -1,27 +1,123 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
+{% extends 'base.html' %}
 
-<div class="box">
-    <h1>Object Detection For Blind</h1>
+{% block title %}Caretaker Login - Vision Assist AI{% endblock %}
 
-    <form action="/dashboard">
-        <input type="text" placeholder="Username" required>
-        <input type="password" placeholder="Password" required>
+{% block extra_css %}
+<style>
+    /* Background decorative blobs for beautiful glassmorphic depth */
+    .bg-blobs-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
 
-        <button type="submit">Login</button>
-    </form>
+    .blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.15;
+        animation: floatBlob 20s infinite alternate ease-in-out;
+    }
 
-    <br>
+    .blob-1 {
+        width: 300px;
+        height: 300px;
+        background: var(--primary);
+        top: 20%;
+        left: 15%;
+    }
 
-    <p>Don't have an account?</p>
-    <a href="/register">Register Here</a>
+    .blob-2 {
+        width: 400px;
+        height: 400px;
+        background: var(--secondary);
+        bottom: 15%;
+        right: 10%;
+        animation-delay: -5s;
+    }
 
+    @keyframes floatBlob {
+        0% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(30px, -50px) scale(1.1); }
+        100% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+
+    /* Glow border transitions for input fields */
+    .input-group:focus-within label {
+        color: var(--secondary);
+        text-shadow: 0 0 8px var(--secondary-glow);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Decorative background elements -->
+<div class="bg-blobs-container">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
 </div>
 
-</body>
-</html>
+<div class="auth-wrapper" style="position: relative; z-index: 1;">
+    <!-- Glassmorphic Login Card (with shake animation on error) -->
+    <div class="glass-container auth-card {% with messages = get_flashed_messages(category_filter=['danger']) %}{% if messages %}shake{% endif %}{% endwith %}" 
+         style="max-width: 440px; padding: 45px 35px; border-color: rgba(255,255,255,0.08); background: rgba(26, 26, 46, 0.75);">
+        
+        <!-- Header -->
+        <div class="auth-header" style="margin-bottom: 35px;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; border-radius: 50%; background: rgba(0, 206, 201, 0.1); border: 1px solid rgba(0, 206, 201, 0.25); margin-bottom: 20px;">
+                <i class="fa-solid fa-user-lock" style="font-size: 2.2rem; color: var(--secondary);"></i>
+            </div>
+            <h2 style="font-size: 2.2rem; font-weight: 800; tracking-spacing: -0.5px; margin-bottom: 8px;">Portal Access</h2>
+            <p style="color: var(--text-secondary-dark); font-size: 0.9rem;">Authenticate to link with the visual assistance unit</p>
+        </div>
+        
+        <form action="{{ url_for('login') }}" method="POST">
+            <!-- Username input group -->
+            <div class="input-group">
+                <label for="username" style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary-dark); transition: var(--transition);">
+                    <i class="fa-solid fa-envelope" style="margin-right: 6px;"></i> Username / ID
+                </label>
+                <input type="text" name="username" id="username" class="input-control" placeholder="Enter username (e.g. admin)" required autofocus
+                       style="background: rgba(0, 0, 0, 0.2); border-color: rgba(255,255,255,0.05); padding: 14px 18px; font-size: 0.95rem; border-radius: 10px;">
+            </div>
+            
+            <!-- Password input group -->
+            <div class="input-group">
+                <label for="password" style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary-dark); transition: var(--transition);">
+                    <i class="fa-solid fa-shield-halved" style="margin-right: 6px;"></i> Credentials
+                </label>
+                <div class="password-wrapper">
+                    <input type="password" name="password" id="password" class="input-control" placeholder="Enter security password" required
+                           style="background: rgba(0, 0, 0, 0.2); border-color: rgba(255,255,255,0.05); padding: 14px 18px; padding-right: 45px; font-size: 0.95rem; border-radius: 10px;">
+                    <button type="button" class="password-toggle-btn" data-target="password" style="right: 15px; font-size: 1rem;">👁️</button>
+                </div>
+            </div>
+            
+            <!-- Account Footer parameters -->
+            <div class="form-footer-options" style="margin-bottom: 30px;">
+                <label class="remember-me" style="color: var(--text-secondary-dark); font-size: 0.85rem;">
+                    <input type="checkbox" name="remember" style="accent-color: var(--secondary);">
+                    <span>Keep me logged in</span>
+                </label>
+                <a href="#" id="forgot-password-link" style="font-weight: 600; color: var(--secondary); font-size: 0.85rem;">Forgot Credentials?</a>
+            </div>
+            
+            <!-- Submit Button with clean visual gradient -->
+            <button type="submit" class="btn btn-primary" 
+                    style="width: 100%; padding: 15px; font-size: 1.05rem; border-radius: 10px; background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%); border: none; font-weight: 700; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(0, 206, 201, 0.25);">
+                <i class="fa-solid fa-right-to-bracket" style="margin-right: 6px;"></i> Authenticate & Connect
+            </button>
+        </form>
+        
+        <!-- Registration options -->
+        <div style="margin-top: 30px; border-top: 1px solid var(--border-glass); padding-top: 25px; font-size: 0.85rem; color: var(--text-secondary-dark);">
+            <p>New caretaker? <a href="{{ url_for('register') }}" style="font-weight: 700; color: var(--secondary);">Register Here <i class="fa-solid fa-angle-right" style="font-size: 0.75rem;"></i></a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

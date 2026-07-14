@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Blind Assistant Portal{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Base Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% if settings.dark_mode %}dark-mode{% endif %}">
+    
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="{% if session.username %}{{ url_for('dashboard') }}{% else %}{{ url_for('login') }}{% endif %}" class="nav-logo">
+            <i class="fa-solid fa-eye-slash"></i>
+            <span>Vision Assist AI</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('website') }}"><i class="fa-solid fa-circle-info"></i> Project Website</a></li>
+            {% if session.username %}
+                <li><a href="{{ url_for('dashboard') }}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('settings') }}"><i class="fa-solid fa-gears"></i> Settings</a></li>
+                <li><a href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+            {% else %}
+                <li><a href="{{ url_for('login') }}"><i class="fa-solid fa-right-to-bracket"></i> Login</a></li>
+                <li><a href="{{ url_for('register') }}"><i class="fa-solid fa-user-plus"></i> Register</a></li>
+            {% endif %}
+            <li><button class="btn btn-secondary" id="theme-toggle" style="padding: 6px 14px; font-size: 0.85rem;"><i class="fa-solid fa-circle-half-stroke"></i> Theme</button></li>
+        </ul>
+    </nav>
+
+    <!-- Main Container -->
+    <main style="flex: 1; display: flex; flex-direction: column; width: 100%;">
+        <!-- Flash Messages -->
+        <div style="max-width: 800px; margin: 20px auto 0 auto; width: 90%; padding: 0 10px;">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flashes">
+                        {% for category, message in messages %}
+                            <li class="alert alert-{{ category }}">
+                                {% if category == 'success' %}
+                                    <i class="fa-solid fa-circle-check"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-circle-exclamation"></i>
+                                {% endif %}
+                                <span>{{ message }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 20px; border-top: 1px solid var(--border-glass); font-size: 0.85rem; color: var(--text-secondary-dark); background: rgba(0,0,0,0.15);">
+        <p>&copy; 2026 Object Detection for Blind Assistant. All Rights Reserved. Built for Engineering Final-Year Project.</p>
+    </footer>
+
+    <!-- Main JS file -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

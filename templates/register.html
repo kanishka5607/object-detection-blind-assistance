@@ -1,19 +1,53 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Register</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-<h2>Register Page</h2>
+{% block title %}Register Caretaker - Vision Assist AI{% endblock %}
 
-<form>
-    <input type="text" placeholder="Username" required><br><br>
-    <input type="password" placeholder="Password" required><br><br>
-    <button type="submit">Register</button>
-</form>
+{% block content %}
+<div class="auth-wrapper">
+    <div class="glass-container auth-card">
+        <div class="auth-header" style="margin-bottom: 25px;">
+            <i class="fa-solid fa-user-plus" style="font-size: 3.5rem; color: var(--primary); margin-bottom: 15px;"></i>
+            <h2>Caretaker Registration</h2>
+            <p style="color: var(--text-secondary-dark); font-size: 0.9rem;">Create a portal account to configure accessibility services</p>
+        </div>
 
-<a href="/">Back to Login</a>
+        <!-- Local client-side JS alert banner -->
+        <div id="client-alert" style="display: none; margin-bottom: 20px;"></div>
+        
+        <form action="{{ url_for('register') }}" method="POST" id="register-form">
+            <!-- Username Input -->
+            <div class="input-group">
+                <label for="username"><i class="fa-solid fa-user"></i> Choose Username</label>
+                <input type="text" name="username" id="username" class="input-control" placeholder="Enter username" required autofocus>
+            </div>
+            
+            <!-- Password Input -->
+            <div class="input-group">
+                <label for="password"><i class="fa-solid fa-lock"></i> Password</label>
+                <div class="password-wrapper">
+                    <input type="password" name="password" id="password" class="input-control" placeholder="Enter password (min 6 chars)" required>
+                    <button type="button" class="password-toggle-btn" data-target="password">👁️</button>
+                </div>
+            </div>
 
-</body>
-</html>
+            <!-- Confirm Password Input -->
+            <div class="input-group">
+                <label for="confirm_password"><i class="fa-solid fa-lock-open"></i> Confirm Password</label>
+                <div class="password-wrapper">
+                    <input type="password" name="confirm_password" id="confirm_password" class="input-control" placeholder="Re-enter password" required>
+                    <button type="button" class="password-toggle-btn" data-target="confirm_password">👁️</button>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-secondary" style="width: 100%; padding: 14px; font-size: 1.05rem; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); border: none;">
+                <i class="fa-solid fa-user-check"></i> Complete Registration
+            </button>
+        </form>
+        
+        <div style="margin-top: 25px; border-top: 1px solid var(--border-glass); padding-top: 20px; font-size: 0.9rem; color: var(--text-secondary-dark);">
+            <p>Already have an account? <a href="{{ url_for('login') }}" style="font-weight: 600; color: var(--secondary);">Login Here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

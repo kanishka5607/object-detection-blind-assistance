@@ -1,0 +1,7 @@
+{
+    "dark_mode": false,
+    "voice_speed": 150,
+    "voice_volume": 100,
+    "detection_sensitivity": 93,
+    "speech_gap": 5
+}

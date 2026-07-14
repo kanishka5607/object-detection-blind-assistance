@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Camera Active - Vision Assist AI{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 40px auto; padding: 0 20px; text-align: center;">
+    <div class="glass-container">
+        <!-- Glowing camera icon/ring -->
+        <div style="margin-bottom: 30px; display: inline-block; position: relative;">
+            <div style="width: 100px; height: 100px; border-radius: 50%; background: rgba(0, 206, 201, 0.1); border: 2px dashed var(--secondary); display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite;">
+                <i class="fa-solid fa-camera" style="font-size: 3rem; color: var(--secondary);"></i>
+            </div>
+            <span style="position: absolute; right: 0; bottom: 0; width: 22px; height: 22px; border-radius: 50%; background-color: var(--success); border: 3px solid var(--bg-dark); display: block;" title="Active"></span>
+        </div>
+
+        <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 10px;">Camera Detection Running</h1>
+        <p style="color: var(--text-secondary-dark); font-size: 1.05rem; margin-bottom: 25px;">
+            A separate local OpenCV visual stream window has been spawned. The YOLOv8 model is processing video frames at real-time speeds.
+        </p>
+
+        <!-- Troubleshooting Card -->
+        <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 20px; text-align: left; margin-bottom: 30px; border: 1px solid var(--border-glass);">
+            <h3 style="margin-bottom: 12px; font-size: 1.05rem; color: var(--secondary);"><i class="fa-solid fa-circle-info"></i> Keyboard & Window Controls</h3>
+            <ul style="list-style-type: none; font-size: 0.9rem; line-height: 1.6; color: var(--text-secondary-dark);">
+                <li style="margin-bottom: 8px;"><i class="fa-solid fa-angle-right" style="color: var(--primary);"></i> Press the <strong>ESC</strong> key on your keyboard to close the video feed gracefully.</li>
+                <li style="margin-bottom: 8px;"><i class="fa-solid fa-angle-right" style="color: var(--primary);"></i> Or click the <strong>Close (X)</strong> button directly on the "Object Detection For Blind" window.</li>
+                <li style="margin-bottom: 8px;"><i class="fa-solid fa-angle-right" style="color: var(--primary);"></i> If you run it on standard equipment, make sure your external webcam is connected correctly.</li>
+            </ul>
+        </div>
+
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <a href="{{ url_for('camera') }}" class="btn btn-secondary"><i class="fa-solid fa-arrows-rotate"></i> Restart Stream</a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary"><i class="fa-solid fa-circle-arrow-left"></i> Return to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
