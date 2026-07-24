@@ -14,7 +14,7 @@
 
         <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">Voice Assistant Services</h1>
         <p style="color: var(--text-secondary-dark); font-size: 1rem; margin-bottom: 25px;">
-            The pyttsx3 offline text-to-speech engine is listening for voice trigger signals. 
+            The browser text-to-speech engine is active and ready to assist you.
         </p>
 
         <!-- Simulated Visualizer Canvas -->
@@ -28,7 +28,7 @@
             <h3 style="margin-bottom: 12px; font-size: 1rem; font-weight: 600;"><i class="fa-solid fa-keyboard" style="color: var(--secondary);"></i> Voice Shortcuts</h3>
             <ul style="list-style-type: none; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary-dark);">
                 <li style="margin-bottom: 6px;"><i class="fa-regular fa-square-caret-right" style="color: var(--primary);"></i> Press <strong>Spacebar</strong> to trigger a location check query.</li>
-                <li style="margin-bottom: 6px;"><i class="fa-regular fa-square-caret-right" style="color: var(--primary);"></i> The system speaks detections automatically through your audio outputs.</li>
+                <li style="margin-bottom: 6px;"><i class="fa-regular fa-square-caret-right" style="color: var(--primary);"></i> The system speaks detections automatically through your browser speech synthesis.</li>
             </ul>
         </div>
 
@@ -38,4 +38,17 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Speak welcome announcement client-side on load
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance("Welcome to Object Detection For Blind. Voice Assistant active.");
+            window.speechSynthesis.speak(utterance);
+        }
+    });
+</script>
 {% endblock %}
