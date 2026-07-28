@@ -9,18 +9,12 @@ import numpy as np
 import cv2
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
-from ultralytics import YOLO
+#from ultralytics import YOLO
 
 app = Flask(__name__)
 app.secret_key = "blind_assistant_super_secret_key"
 
 SETTINGS_FILE = "settings.json"
-
-# Load YOLO model globally at startup (yolov8s.pt or fallback yolov8n.pt)
-try:
-    model = YOLO("yolov8s.pt")
-except Exception:
-    model = YOLO("yolov8n.pt")
 
 def get_db():
     conn = sqlite3.connect("database.db")
