@@ -272,10 +272,7 @@ def gps():
 def website():
     return render_template("website.html")
 
-@app.route("/logout")git status
-git add .
-git commit -m "Updated project"
-git push origin main
+@app.route("/logout")
 def logout():
     session.pop("username", None)
     return redirect(url_for("login"))
