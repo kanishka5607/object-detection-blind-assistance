@@ -11,7 +11,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.secret_key = "blind_assistant_super_secret_key"
 
-SETTINGS_FILE = "settings.json"ss
+SETTINGS_FILE = "settings.json"
 
 def get_db():
     conn = sqlite3.connect("database.db")
