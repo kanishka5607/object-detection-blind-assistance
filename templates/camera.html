@@ -1,3 +1,4 @@
+<!-- templates/camera.html -->
 {% extends 'base.html' %}
 
 {% block title %}Real-Time Vision Assist AI{% endblock %}
@@ -23,23 +24,10 @@
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
     
-    /* Mirror the feed for standard intuitive webcam interaction */
-    #webcam-feed {
+    #mjpeg-feed {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transform: scaleX(-1);
-    }
-    
-    #box-canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        transform: scaleX(-1);
-        z-index: 10;
     }
     
     .status-badge {
@@ -57,12 +45,6 @@
         background: rgba(46, 204, 113, 0.15);
         border: 1px solid var(--success);
         color: #2ecc71;
-    }
-    
-    .status-inactive {
-        background: rgba(214, 48, 49, 0.15);
-        border: 1px solid var(--danger);
-        color: #ff7675;
     }
     
     .detections-panel {
@@ -96,45 +78,33 @@
 <div class="camera-container">
     <div class="glass-container" style="text-align: center;">
         
-        <!-- Header -->
         <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 10px;">
             <i class="fa-solid fa-circle-dot" style="color: var(--danger); animation: pulse 1.5s infinite; margin-right: 8px;"></i>
             Live Vision Assist
         </h1>
         <p style="color: var(--text-secondary-dark); font-size: 1rem; margin-bottom: 20px; max-width: 600px; margin-left: auto; margin-right: auto;">
-            Uses your browser's webcam to perform on-device image streaming. Server-side YOLOv8 processes frames, and Web Speech Synthesis speaks detections.
+            Uses Server-Side MJPEG streaming and background TTS.
         </p>
         
-        <!-- Status Indicator -->
-        <div id="camera-status-badge" class="status-badge status-inactive">
-            <i class="fa-solid fa-video-slash"></i> <span id="status-text">Webcam Access Not Started</span>
+        <div id="camera-status-badge" class="status-badge status-active">
+            <i class="fa-solid fa-video"></i> <span id="status-text">Server Camera Active</span>
         </div>
 
-        <!-- Video Viewport -->
         <div class="video-viewport">
-            <video id="webcam-feed" autoplay playsinline muted></video>
-            <canvas id="box-canvas" width="640" height="480"></canvas>
+            <img id="mjpeg-feed" src="{{ url_for('video_feed') }}" alt="Live Camera Stream">
         </div>
 
-        <!-- Real-Time Detections List -->
         <div class="detections-panel">
             <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-list-check" style="color: var(--secondary);"></i>
-                <span>Detected Objects & Distances</span>
+                <span>Detected Objects</span>
             </h3>
             <div id="detections-list">
-                <p style="color: var(--text-secondary-dark); font-size: 0.9rem; margin: 0;">No active detections. Camera is offline.</p>
+                <p style="color: var(--text-secondary-dark); font-size: 0.9rem; margin: 0;">Scanning...</p>
             </div>
         </div>
 
-        <!-- Controls -->
         <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-            <button id="toggle-camera-btn" class="btn btn-secondary" style="padding: 12px 28px;">
-                <i class="fa-solid fa-play"></i> Start Camera Stream
-            </button>
-            <button id="toggle-audio-btn" class="btn btn-primary" style="padding: 12px 28px; background: linear-gradient(135deg, var(--primary) 0%, #6c5ce7 100%);">
-                <i class="fa-solid fa-volume-high"></i> Mute Audio Feedback
-            </button>
             <a href="{{ url_for('dashboard') }}" class="btn btn-outline" style="padding: 12px 28px;">
                 <i class="fa-solid fa-arrow-left"></i> Return to Dashboard
             </a>
@@ -145,249 +115,30 @@
 
 {% block extra_js %}
 <script>
-    // Variables parsed dynamically from Flask Settings
-    const speechGap = {{ settings_data.speech_gap | default(3) }} * 1000; // convert to ms
-    const voiceVolume = {{ settings_data.voice_volume | default(100) }} / 100.0;
-    const voiceSpeed = {{ settings_data.voice_speed | default(150) }};
-    
-    // Map speaking speed (WPM) to SpeechSynthesisUtterance rate parameter (0.5 to 2.0)
-    // 150 wpm maps to rate 1.0 (default)
-    const speakRate = Math.max(0.5, Math.min(2.0, voiceSpeed / 150.0));
-
-    const video = document.getElementById("webcam-feed");
-    const canvas = document.getElementById("box-canvas");
-    const ctx = canvas.getContext("2d");
-    
-    const toggleCamBtn = document.getElementById("toggle-camera-btn");
-    const toggleAudioBtn = document.getElementById("toggle-audio-btn");
-    const statusBadge = document.getElementById("camera-status-badge");
-    const statusText = document.getElementById("status-text");
     const detectionsList = document.getElementById("detections-list");
 
-    let localStream = null;
-    let captureInterval = null;
-    let isCameraActive = false;
-    let isAudioMuted = false;
-    let lastSpoken = {};
+    function fetchDetections() {
+        fetch("/api/detections")
+            .then(res => res.json())
+            .then(data => {
+                if (!data.detections || data.detections.length === 0) {
+                    detectionsList.innerHTML = '<p style="color: var(--text-secondary-dark); font-size: 0.9rem; margin: 0;">No obstacles detected.</p>';
+                    return;
+                }
 
-    // Off-screen canvas for capturing image frames to compress to JPEG
-    const captureCanvas = document.createElement("canvas");
-    captureCanvas.width = 640;
-    captureCanvas.height = 480;
-    const captureCtx = captureCanvas.getContext("2d");
-
-    // Initialize/Toggle webcam feed
-    toggleCamBtn.addEventListener("click", () => {
-        if (isCameraActive) {
-            stopCamera();
-        } else {
-            startCamera();
-        }
-    });
-
-    // Toggle speech audio
-    toggleAudioBtn.addEventListener("click", () => {
-        isAudioMuted = !isAudioMuted;
-        if (isAudioMuted) {
-            toggleAudioBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i> Unmute Audio Feedback';
-            toggleAudioBtn.style.opacity = "0.7";
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-            }
-        } else {
-            toggleAudioBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Mute Audio Feedback';
-            toggleAudioBtn.style.opacity = "1";
-        }
-    });
-
-    function startCamera() {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({
-                video: { width: 640, height: 480, facingMode: "environment" }
+                let badgesHtml = "";
+                data.detections.forEach(det => {
+                    const label = det.label;
+                    const conf = det.confidence;
+                    badgesHtml += `<span class="detection-badge"><i class="fa-solid fa-cube"></i> ${label} (${Math.round(conf * 100)}%)</span>`;
+                });
+                detectionsList.innerHTML = badgesHtml;
             })
-            .then(stream => {
-                localStream = stream;
-                video.srcObject = stream;
-                isCameraActive = true;
-                
-                // Update badge status
-                statusBadge.className = "status-badge status-active";
-                statusText.innerText = "Camera Connected & Streaming";
-                toggleCamBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Camera Stream';
-                
-                // Speak confirmation
-                speakLocal("Vision Assist active. Scanning environment.");
-                
-                // Trigger recursive capture frame loop Throttled at ~250ms (4 FPS)
-                captureInterval = setTimeout(captureFrame, 250);
-            })
-            .catch(error => {
-                console.error("Camera access error:", error);
-                alert("Unable to access camera. Please check browser camera permissions.");
+            .catch(err => {
+                console.error("Error fetching detections API:", err);
             });
-        } else {
-            alert("Your browser does not support webcam capture APIs.");
-        }
     }
 
-    function stopCamera() {
-        isCameraActive = false;
-        
-        // Stop timeout loop
-        if (captureInterval) {
-            clearTimeout(captureInterval);
-            captureInterval = null;
-        }
-
-        // Stop camera tracks
-        if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
-            localStream = null;
-        }
-        video.srcObject = null;
-        
-        // Clear canvas drawings
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Reset status indicators
-        statusBadge.className = "status-badge status-inactive";
-        statusText.innerText = "Camera Stream Stopped";
-        toggleCamBtn.innerHTML = '<i class="fa-solid fa-play"></i> Start Camera Stream';
-        detectionsList.innerHTML = '<p style="color: var(--text-secondary-dark); font-size: 0.9rem; margin: 0;">No active detections. Camera is offline.</p>';
-        
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-        }
-    }
-
-    // Capture off-screen video frames, convert to Base64 and send to Flask API
-    function captureFrame() {
-        if (!isCameraActive || video.paused || video.ended) {
-            return;
-        }
-        
-        // Capture frame to off-screen canvas
-        captureCtx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
-        
-        // Convert to Base64 (JPG quality 0.6 to minimize size)
-        const base64Data = captureCanvas.toDataURL("image/jpeg", 0.6);
-        
-        // Post frame to flask
-        fetch("/detect", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ image: base64Data })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Network response error");
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                renderDetections(data.detections);
-            }
-            
-            // Call next frame loop in 250ms (achieves 4 FPS)
-            if (isCameraActive) {
-                captureInterval = setTimeout(captureFrame, 250);
-            }
-        })
-        .catch(err => {
-            console.error("Frame upload error:", err);
-            // Retry after brief delay
-            if (isCameraActive) {
-                captureInterval = setTimeout(captureFrame, 1000);
-            }
-        });
-    }
-
-    // Render bounding boxes on Canvas and populate text list
-    function renderDetections(detections) {
-        // Clear previous frame bounding boxes
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        if (!detections || detections.length === 0) {
-            detectionsList.innerHTML = '<p style="color: var(--text-secondary-dark); font-size: 0.9rem; margin: 0;">No obstacles detected.</p>';
-            return;
-        }
-
-        let badgesHtml = "";
-        const speakList = [];
-
-        detections.forEach(det => {
-            const label = det.label;
-            const conf = det.confidence;
-            const dist = det.distance;
-            const [x1, y1, x2, y2] = det.box;
-
-            // Draw bounding box rectangles
-            ctx.strokeStyle = "#00cec9"; // secondary cyan color
-            ctx.lineWidth = 3;
-            ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
-
-            // Draw label container
-            ctx.fillStyle = "rgba(0, 206, 201, 0.8)";
-            ctx.fillRect(x1, y1 - 24, x2 - x1, 24);
-
-            // Draw text tags inside mirrored canvas
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "bold 13px 'Outfit', sans-serif";
-            ctx.fillText(`${label} [${Math.round(conf * 100)}%] ${dist}m`, x1 + 6, y1 - 7);
-
-            // Generate HTML badges list
-            badgesHtml += `<span class="detection-badge"><i class="fa-solid fa-cube"></i> ${label} (${dist}m)</span>`;
-            
-            speakList.push(det);
-        });
-
-        detectionsList.innerHTML = badgesHtml;
-        
-        // Announce detections via Web Speech API
-        speakDetections(speakList);
-    }
-
-    // Web Speech synthesis checks
-    function speakDetections(detections) {
-        if (isAudioMuted || !('speechSynthesis' in window)) {
-            return;
-        }
-
-        const currentTime = Date.now();
-
-        detections.forEach(det => {
-            const label = det.label;
-            const dist = det.distance;
-
-            // Cooldown check based on speechGap setting
-            if (!lastSpoken[label] || (currentTime - lastSpoken[label]) > speechGap) {
-                const utteranceText = `${label} at ${dist} meters`;
-                const utterance = new SpeechSynthesisUtterance(utteranceText);
-                utterance.volume = voiceVolume;
-                utterance.rate = speakRate;
-                
-                window.speechSynthesis.speak(utterance);
-                lastSpoken[label] = currentTime;
-            }
-        });
-    }
-
-    // Helper function to speak general status announcements
-    function speakLocal(text) {
-        if (isAudioMuted || !('speechSynthesis' in window)) return;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.volume = voiceVolume;
-        utterance.rate = speakRate;
-        window.speechSynthesis.speak(utterance);
-    }
-
-    // Ensure camera turns off when user leaves page
-    window.addEventListener("beforeunload", () => {
-        stopCamera();
-    });
+    setInterval(fetchDetections, 500);
 </script>
 {% endblock %}
